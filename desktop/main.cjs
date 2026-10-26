@@ -99,7 +99,7 @@ async function createWindow() {
   // Chromium extension APIs only partially, so this is best-effort.
   if (fs.existsSync(path.join(extensionRoot, 'manifest.json'))) {
     try {
-      await session.defaultSession.loadExtension(extensionRoot, { allowFileAccess: false });
+      await session.defaultSession.extensions.loadExtension(extensionRoot, { allowFileAccess: false });
       console.log('BitChord companion extension loaded.');
     } catch (error) {
       console.warn('Could not load BitChord companion extension:', error);
