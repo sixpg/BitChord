@@ -256,7 +256,12 @@ export default defineBackground(() => {
     acceptPort(port);
   });
 
-  browser.cookies.onChanged.addListener(onCookieChanged);
+  // Electron does not implement chrome.cookies for loaded extensions. Keep the
+  // background worker alive so the bridge can still answer its startup ping.
+  // Cookie-dependent YouTube/Spotify auth remains browser-only in this build.
+  if (browser.cookies?.onChanged?.addListener) {
+    browser.cookies.onChanged.addListener(onCookieChanged);
+  }
 
   // Discord's account is written by the connect page as well as here.
   discord.onDiscordState((data) => broadcast({ event: 'discord.state', data }));
