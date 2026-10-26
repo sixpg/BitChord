@@ -42,6 +42,12 @@ jobs:
       - name: Package BitChord browser extensions for the web UI
         run: corepack pnpm --dir web/extension package
 
+      - name: Build Electron-compatible Chromium extension for desktop
+        working-directory: web/extension
+        env:
+          BITCHORD_ELECTRON_BUILD: '1'
+        run: corepack pnpm exec wxt build
+
       - name: Build BitChord web client
         working-directory: web/app
         env:
