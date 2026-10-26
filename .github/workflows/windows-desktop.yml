@@ -33,8 +33,11 @@ jobs:
         working-directory: web
         run: corepack pnpm install --frozen-lockfile
 
-      - name: Generate a matching local extension ID
-        run: node web/extension/scripts/gen-dev-key.mjs
+      - name: Pass extension ID to web build
+        shell: pwsh
+        run: |
+         $extensionId = (Get-Content web/extension/dev-key/extension-id.txt -Raw).Trim()
+         "VITE_EXTENSION_ID_CHROMIUM=$extensionId" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Package BitChord browser extensions for the web UI
         run: corepack pnpm --dir web/extension package
