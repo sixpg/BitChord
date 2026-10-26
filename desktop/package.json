@@ -1,0 +1,53 @@
+{
+  "name": "bitchord-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unofficial Windows desktop package for BitChord",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "in.bitchord.desktop.unofficial",
+    "productName": "BitChord",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/web",
+        "to": "web"
+      },
+      {
+        "from": "resources/extension",
+        "to": "extension"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "BitChord-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BitChord"
+    }
+  }
+}

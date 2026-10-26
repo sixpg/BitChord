@@ -1,0 +1,73 @@
+name: Build BitChord Windows desktop app
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "desktop/**"
+      - "web/**"
+      - ".github/workflows/windows-desktop.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install web workspace dependencies
+        working-directory: web
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Generate a matching local extension ID
+        run: node web/extension/scripts/gen-dev-key.mjs
+
+      - name: Package BitChord browser extensions for the web UI
+        run: corepack pnpm --dir web/extension package
+
+      - name: Build BitChord web client
+        working-directory: web/app
+        env:
+          # The app's build checks this value. Set a real server URL as the
+          # VITE_PARTY_SERVER_URL Actions secret to enable Listen Together.
+          # The placeholder lets the rest of the desktop package build without
+          # requiring a private party-server URL.
+          VITE_PARTY_SERVER_URL: ${{ secrets.VITE_PARTY_SERVER_URL || 'https://party-server-not-configured.invalid' }}
+        run: corepack pnpm build
+
+      - name: Stage web app and extension for Electron
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force desktop/resources/web | Out-Null
+          New-Item -ItemType Directory -Force desktop/resources/extension | Out-Null
+          Copy-Item web/app/dist/* desktop/resources/web -Recurse -Force
+          Copy-Item web/extension/.output/chrome-mv3/* desktop/resources/extension -Recurse -Force
+          if (!(Test-Path desktop/resources/web/index.html)) { throw "Web build index.html was not created." }
+          if (!(Test-Path desktop/resources/extension/manifest.json)) { throw "Chrome extension manifest was not created." }
+
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+
+      - name: Build Windows installer
+        working-directory: desktop
+        run: npm run dist:win
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: BitChord-Windows-Installer
+          path: desktop/dist/BitChord-Setup-1.0.0.exe
+          if-no-files-found: error
+          retention-days: 14
