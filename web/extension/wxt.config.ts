@@ -5,6 +5,8 @@ import { matchPatternsFor, SITE_ORIGINS } from './site.config';
 
 /** BITCHORD_STORE_BUILD=1 for a Chrome Web Store upload. */
 const STORE_BUILD = process.env.BITCHORD_STORE_BUILD === '1';
+/** Electron's Chromium does not implement the extension cookies API. */
+const ELECTRON_BUILD = process.env.BITCHORD_ELECTRON_BUILD === '1';
 
 /**
  * Discord presence is user-token automation (prompt §7.3), so it is a build
@@ -33,7 +35,7 @@ export default defineConfig({
     // the cookies themselves never leave the extension (lib/ytAuth.ts).
     // `scripting` reads the Discord token from a discord.com tab, and only on
     // the user's "Connect Discord" (lib/discord.ts).
-    permissions: ['storage', 'declarativeNetRequest', 'cookies', ...(DISCORD_PRESENCE ? ['scripting'] : [])],
+    permissions: ['storage', 'declarativeNetRequest', ...(!ELECTRON_BUILD ? ['cookies'] : []), ...(DISCORD_PRESENCE ? ['scripting'] : [])],
     // YouTube (phases 3 and 5) and Spotify (phase 9; the sp_dc cookie is read
     // and used here only, lib/spotify.ts). The site's own origins are listed
     // because header rules need host access to the initiator as well as the
