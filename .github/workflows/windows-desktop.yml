@@ -23,8 +23,11 @@ jobs:
         with:
           node-version: 24
 
-      - name: Enable pnpm
-        run: corepack enable
+      - name: Set up required pnpm version
+        run: |
+          corepack enable
+          corepack prepare pnpm@12.11.2 --activate
+          corepack pnpm --version
 
       - name: Install web workspace dependencies
         working-directory: web
@@ -39,10 +42,6 @@ jobs:
       - name: Build BitChord web client
         working-directory: web/app
         env:
-          # The app's build checks this value. Set a real server URL as the
-          # VITE_PARTY_SERVER_URL Actions secret to enable Listen Together.
-          # The placeholder lets the rest of the desktop package build without
-          # requiring a private party-server URL.
           VITE_PARTY_SERVER_URL: ${{ secrets.VITE_PARTY_SERVER_URL || 'https://party-server-not-configured.invalid' }}
         run: corepack pnpm build
 
